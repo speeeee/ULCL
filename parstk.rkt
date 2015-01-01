@@ -1,0 +1,105 @@
+#lang racket
+(require "parapp.rkt")
+
+;typedef struct val { char *v; int t; struct val *lst; } val;
+;possibly linked-list?
+
+;important corner-case: { { 1 } + { 2 } } will parse the function within
+;                     : the braces even though it shouldn't.  Fix it.
+
+;make exec which takes a list and process what's in it like an expression.
+
+(define funs* (list (list "+" '("X" "Y") (list (list "&" 'ret)))
+                    (list ":" '("name" "params" "output" "def") (list (list "$" 'spec)))
+                    (list "eval" '("a") '())))
+
+; TODO: make a push-n~
+(define (push-n~ stk lst)
+  (if (empty? lst) stk (push-n~ (push~ stk (car lst)) (cdr lst))))
+
+(define st '())
+(set! st (push-n st (list (list "2" 'lit) (list "1" 'lit) (list "+" 'id))))
+
+(define (add-up stk)
+  (foldr + 0 (map (λ (x) (cond [(equal? (second x) 'lit) 1]
+                               [(equal? (second x) 'id)
+                                (let ([f (find-fun (car x) funs*)])
+                                  (- (length (third f)) (length (second f))))]
+                               [(list? (car x)) (add-up x)]
+                               [else 0])) stk)))
+
+(define (out-rkt f) ; test if caar is ':'
+  (cond [(string=? (caar f) ":")
+         (let* ([a (car (cdr f))] [b (if (equal? (second (first (cdr (second (cdr f))))) 'temp)
+                                        '() (cdr (second (cdr f))))] 
+                                  [d (filter (λ (x) (not (equal? x (list "~" 'temp)))) (cdr (third (cdr f))))]
+                                  [c (if (equal? b '()) (cdr (fourth (cdr f)))
+                                         (append (cdr (second (cdr f))) (cdr (fourth (cdr f)))))])
+           (set! funs* (push funs* (list (caar (cdr f)) b 
+                                         (make-list (length d) (list "&" 'ret)))))
+           (fprintf (current-output-port) "(define (~a " (caar (cdr f)))
+           (map (λ (x) (fprintf (current-output-port) "~a " x)) (map car b))
+           (fprintf (current-output-port) ")~n   " )
+           (process-line (map (λ (x) (if (and (equal? (second x) 'lit) (equal? (second (lex (car x))) 'id)) 
+                                         (list->string (append (list #\') (string->list (car x)))) (car x))) c) '()) (fprintf (current-output-port) ")~n"))]
+        [(string=? (caar f) "eval")
+         (let ([e (cdr (second f))])
+           (process-line (map car e) '()))]
+        [else 
+         (begin (fprintf (current-output-port) "(push! stk (~a " (caar f))
+             (map (lambda (x) (if (and (list? (car x)) (equal? (second (car x)) 'full)) 
+                                  (begin (fprintf (current-output-port) "'(")
+                                         (map (λ (y) (fprintf (current-output-port) "~a " (car y))) (cdr x))
+                                         (fprintf (current-output-port) ") "))
+                                  (fprintf (current-output-port) "~a " 
+                                           (if (equal? (second x) 'ret) "(pop! stk)" (car x))))) (cdr f))
+             (fprintf (current-output-port) "))~n"))]))
+(define (test-full e)
+  (if (full-cons? (pop e))
+      (if (string=? (caar (pop e)) "eval")
+          (let ([g (cdr (second (pop e)))])
+            (process-line (map car g) '()))
+          (begin (out-rkt (pop e))
+                 (push-n (ret-pop e) (third (car (pop e))))))
+      e))
+
+(define (lst? s) (and (list? s) (not (empty? s)) (equal? (car s) '("$" full))))
+
+(define (push~ stk s) ;NEXT: fix embedded array issue.
+  (cond [(and (not (empty? stk)) (not (empty? (pop stk))) (list? (car (pop stk))) (or (not (equal? (second s) 'lclos)) (> (caar (pop stk)) 0))
+              (list? (car (pop stk))) (equal? (cadar (pop stk)) 'prog))
+         (if (or (equal? (second s) 'lopen) (equal? (second s) 'lclos))
+             (push (ret-pop stk) 
+                   (push (append (list (list (+ (caar (pop stk)) (if (equal? (second s) 'lopen) 1 -1)) 'prog)) (cdr (pop stk))) s))
+             (push (ret-pop stk) (push (pop stk) s)))]
+        [(equal? (second s) 'open) 
+         (if (and (not (empty? stk)) (list? (car (pop stk))) (equal? (cadar (pop stk)) 'prog)) 
+                                     (push stk s) (push stk '()))]
+        [(equal? (second s) 'lopen) (push stk '((0 prog)))]
+        [(equal? (second s) 'lclos) 
+         (if (< (length (pop stk)) 2) (push~ (ret-pop stk) (list '("$" full) '("~" temp)))
+             (push~ (ret-pop stk) (cons '("$" full) (cdr (pop stk)))))]
+        [(equal? (second s) 'close) 
+         (if (equal? (cadar (pop stk)) 'prog)
+            (push (ret-pop stk) (push (pop stk) s)) 
+            (push-n~ (ret-pop stk) (process-line (if (list? (car (pop stk))) (pop stk) (map car (pop stk))) '())))]
+        [(and (not (empty? stk)) (or (empty? (pop stk)) (and (list? (car (pop stk))) (not (equal? (second (car (pop stk))) 'full)))) 
+              (not (fcons? (pop stk) funs*)))
+         (push (ret-pop stk) (push (pop stk) s))] ; the list case
+        [(and (not (empty? stk)) (fcons? (pop stk) funs*) (not (full-cons? (pop stk))))
+         (let ([e (push (ret-pop stk) (push (pop stk) s))])
+           (test-full e))] ; function test
+        [(equal? (second s) 'lit) (push stk s)]
+        [(equal? (second s) 'id) 
+         (let ([e (push-cons (push stk s) funs*)])
+           (test-full e))]
+        [else (push stk s)]))
+
+(define (process-line s stk)
+  (if (empty? s) stk (process-line (cdr s) (push~ stk (lex (car s))))))
+
+(define (main)
+  (write (process-line (string-split (read-line)) '()))
+  (main))
+
+(main)
