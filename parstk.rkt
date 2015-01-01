@@ -1,6 +1,8 @@
 #lang racket
 (require "parapp.rkt")
 
+;NOTE: the source code isn't anything special.
+
 ;typedef struct val { char *v; int t; struct val *lst; } val;
 ;possibly linked-list?
 
