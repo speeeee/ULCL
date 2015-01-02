@@ -100,8 +100,23 @@
 (define (process-line s stk)
   (if (empty? s) stk (process-line (cdr s) (push~ stk (lex (car s))))))
 
+
+(define (tok str lst)
+  (if (empty? str) (list (list->string lst) "")
+    (let ([c (car str)])
+      (if (and (not (empty? lst)) (equal? (car lst) #\"))
+          (if (equal? c #\") (list (list->string (append lst (list c))) (list->string (cdr str)))
+              (tok (cdr str) (append lst (list c))))
+          (if (or (char-whitespace? c)) (if (empty? lst) (tok (cdr str) lst) (list (list->string lst) (list->string str)))
+              (tok (cdr str) (append lst (list c))))))))
+(define (string-split-spec str)
+  (splt str '()))
+(define (splt str lst)
+  (if (empty? (string->list str)) lst
+      (splt (cadr (tok (string->list str) '())) (append lst (list (car (tok (string->list str) '())))))))
+
 (define (main)
-  (write (process-line (string-split (read-line)) '()))
+  (write (process-line (string-split-spec (read-line)) '()))
   (main))
 
 (main)
