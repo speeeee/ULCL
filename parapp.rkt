@@ -21,6 +21,7 @@
         [(char-numeric? (string-ref x 0)) (list x 'lit)]
         [(equal? (string-ref x 0) #\~) (list x 'temp)]
         [(equal? (string-ref x 0) #\#) (list (string-ref x 1) 'lit)]
+        [(equal? (string-ref x 0) #\") (list x 'lit)]
         [(or (equal? (string-ref x 0) #\()) (list x 'open)]
         [(equal? (string-ref x 0) #\{) (list x 'lopen)]
         [(equal? (string-ref x 0) #\)) (list x 'close)]
@@ -30,9 +31,11 @@
         [else (list x 'id)]))
 
 (define (*get-tok* f lst) 
-  (let ([c (read-char f)])
-    (if (or (equal? c #\space) (equal? c eof)) (string lst) 
-        (*get-tok* f (append lst (list c))))))
+  (let ([c (read-char f)]) (displayln c)
+    (if (and (not (empty? lst)) (equal? (first lst) #\"))
+        (if (equal? c #\") (string lst) (*get-tok* f (append lst (list c))))
+        (if (or (equal? c #\space) (equal? c eof)) (string lst) 
+            (*get-tok* f (append lst (list c)))))))
 (define (get-tok f) (lex (string (*get-tok* f '()))))
 
 (define (find-fun s fs)
