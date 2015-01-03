@@ -11,6 +11,18 @@
 
 ;make exec which takes a list and process what's in it like an expression.
 
+;NOTE: sorry about the global stack; I'm trying to keep the program as pure as
+;      possible, but I made this to make it a bit easier to implement.
+;USE: expressions are pushed into this stack, where they will stay until they
+;     are popped to be used in another expression; it's to keep the stack
+;     outside of the compiled program.
+(define stk* '())
+(define (push! s) (set! stk* (push stk* s)))
+(define (pop!) (if (empty? stk*) '()
+                   (let ([x (pop stk*)])
+                     (set! stk* (ret-pop stk*)) 
+                     x)))
+
 (define funs* (list (list "+" '("X" "Y") (list (list "&" 'ret)))
                     (list ":" '("name" "params" "output" "def") (list (list "$" 'spec)))
                     (list "eval" '("a") '())))
@@ -43,19 +55,20 @@
            (map (λ (x) (fprintf (current-output-port) "~a " x)) (map car b))
            (fprintf (current-output-port) ")~n   " )
            (process-line (map (λ (x) (if (and (equal? (second x) 'lit) (equal? (second (lex (car x))) 'id)) 
-                                         (list->string (append (list #\') (string->list (car x)))) (car x))) c) '()) (fprintf (current-output-port) ")~n"))]
+                                         (list->string (append (list #\') (string->list (car x)))) (car x))) c) '()) 
+           (fprintf (current-output-port) (pop!)) (fprintf (current-output-port) ")~n"))]
         [(string=? (caar f) "eval")
          (let ([e (cdr (second f))])
            (process-line (map car e) '()))]
-        [else 
-         (begin (fprintf (current-output-port) "(push! stk (~a " (caar f))
+        [else (let ([o (open-output-string)])
+         (begin (fprintf o "(~a " (caar f))
              (map (lambda (x) (if (and (list? (car x)) (equal? (second (car x)) 'full)) 
-                                  (begin (fprintf (current-output-port) "'(")
-                                         (map (λ (y) (fprintf (current-output-port) "~a " (car y))) (cdr x))
-                                         (fprintf (current-output-port) ") "))
-                                  (fprintf (current-output-port) "~a " 
-                                           (if (equal? (second x) 'ret) "(pop! stk)" (car x))))) (cdr f))
-             (fprintf (current-output-port) "))~n"))]))
+                                  (begin (fprintf o "'(")
+                                         (map (λ (y) (fprintf o "~a " (car y))) (cdr x))
+                                         (fprintf o ") "))
+                                  (fprintf o "~a " 
+                                           (if (equal? (second x) 'ret) (pop!) (car x))))) (cdr f))
+             (fprintf o ")~n") (push! (get-output-string o))))]))
 (define (test-full e)
   (if (full-cons? (pop e))
       (if (string=? (caar (pop e)) "eval")
@@ -117,6 +130,7 @@
 
 (define (main)
   (write (process-line (string-split-spec (read-line)) '()))
+  (fprintf (current-output-port) (if (empty? stk*) "\n" (pop!)))
   (main))
 
 (main)
