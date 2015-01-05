@@ -42,7 +42,7 @@
                                [(list? (car x)) (add-up x)]
                                [else 0])) stk)))
 
-(define (out-rkt f) ; test if caar is ':'
+(define (out-rkt f)
   (cond [(string=? (caar f) ":")
          (let* ([a (car (cdr f))] [b (if (equal? (second (first (cdr (second (cdr f))))) 'temp)
                                         '() (cdr (second (cdr f))))] 
@@ -69,12 +69,44 @@
                                   (fprintf o "~a " 
                                            (if (equal? (second x) 'ret) (pop!) (car x))))) (cdr f))
              (fprintf o ")~n") (push! (get-output-string o))))]))
+(define (out-c f) ; same as out-rkt but prints C instead; will probably take out
+                  ; out-rkt all together once I can effectively print C.
+  (cond [(string=? (caar f) ":")
+         (let* ([a (car (cdr f))] [b (if (equal? (second (first (cdr (second (cdr f))))) 'temp)
+                                        '() (cdr (second (cdr f))))] 
+                                  [d (filter (λ (x) (not (equal? x (list "~" 'temp)))) (cdr (third (cdr f))))]
+                                  [c (if (equal? b '()) (cdr (fourth (cdr f)))
+                                         (append (map (λ (x) (list (string-join (list "'a" (number->string x)) "") 
+                                                                   'lit)) 
+                                                      (range 0 (length (cdr (second (cdr f)))))) 
+                                                 (cdr (fourth (cdr f)))))])
+           (set! funs* (push funs* (list (caar (cdr f)) b 
+                                         (make-list (length d) (list "&" 'ret)))))
+           (fprintf (current-output-port) "~a ~a(" (if (empty? d) "void" (caar d)) (caar (cdr f)))
+           (for ([i (in-range 0 (length b))] [o (map car b)]) 
+             (fprintf (current-output-port) "~a a~a, " o i))
+           (fprintf (current-output-port) ") {~n   " )
+           (process-line (map (λ (x) (if (and (equal? (second x) 'lit) (equal? (second (lex (car x))) 'id)) 
+                                         (list->string (append (list #\') (string->list (car x)))) (car x))) c) '()) 
+           (fprintf (current-output-port) "~a;~n" (pop!)) (fprintf (current-output-port) "}~n"))]
+        [(string=? (caar f) "eval")
+         (let ([e (cdr (second f))])
+           (process-line (map car e) '()))]
+        [else (let ([o (open-output-string)])
+         (begin (fprintf o "~a(" (caar f))
+             (map (lambda (x) (if (and (list? (car x)) (equal? (second (car x)) 'full)) 
+                                  (begin (fprintf o "{")
+                                         (map (λ (y) (fprintf o "~a, " (car y))) (cdr x))
+                                         (fprintf o "} "))
+                                  (fprintf o "~a, " 
+                                           (if (equal? (second x) 'ret) (pop!) (car x))))) (cdr f))
+             (fprintf o ")") (push! (get-output-string o))))]))
 (define (test-full e)
   (if (full-cons? (pop e))
       (if (string=? (caar (pop e)) "eval")
           (let ([g (cdr (second (pop e)))])
             (process-line (map car g) '()))
-          (begin (out-rkt (pop e))
+          (begin (out-c (pop e))
                  (push-n (ret-pop e) (third (car (pop e))))))
       e))
 
@@ -130,7 +162,7 @@
 
 (define (main)
   (write (process-line (string-split-spec (read-line)) '()))
-  (fprintf (current-output-port) (if (empty? stk*) "\n" (pop!)))
+  (fprintf (current-output-port) (if (empty? stk*) "\n" (string-join (list (pop!) ";~n") "")))
   (main))
 
 (main)
