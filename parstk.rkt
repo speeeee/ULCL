@@ -25,7 +25,10 @@
 
 (define funs* (list (list "+" '("X" "Y") (list (list "&" 'ret)))
                     (list ":" '("name" "params" "output" "def") (list (list "$" 'spec)))
-                    (list "eval" '("a") '())))
+                    (list "eval" '("a") '())
+                    (list "%OUT" '("a") '())))
+
+;(define cla (current-command-line-arguments))
 
 ; TODO: make a push-n~
 (define (push-n~ stk lst)
@@ -60,6 +63,9 @@
         [(string=? (caar f) "eval")
          (let ([e (cdr (second f))])
            (process-line (map car e) '()))]
+        [(string=? (caar f) "%OUT")
+         (let ([e (cdar (second f))])
+           (fprintf (current-output-port) (car e)))]
         [else (let ([o (open-output-string)])
          (begin (fprintf o "(~a " (caar f))
              (map (lambda (x) (if (and (list? (car x)) (equal? (second (car x)) 'full)) 
@@ -92,6 +98,9 @@
         [(string=? (caar f) "eval")
          (let ([e (cdr (second f))])
            (process-line (map car e) '()))]
+        [(string=? (caar f) "%OUT")
+         (let ([e (second f)])
+           (fprintf (current-output-port) (car e)))]
         [else (let ([o (open-output-string)])
          (begin (fprintf o "~a(" (caar f))
              (map (lambda (x) (if (and (list? (car x)) (equal? (second (car x)) 'full)) 
@@ -164,5 +173,8 @@
   (write (process-line (string-split-spec (read-line)) '()))
   (fprintf (current-output-port) (if (empty? stk*) "\n" (string-join (list (pop!) ";~n") "")))
   (main))
+
+#;(define (main-2)
+  ())
 
 (main)
