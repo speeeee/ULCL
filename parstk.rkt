@@ -163,6 +163,7 @@
               (tok (cdr str) (append lst (list c))))
           (if (or (char-whitespace? c)) (if (empty? lst) (tok (cdr str) lst) (list (list->string lst) (list->string str)))
               (tok (cdr str) (append lst (list c))))))))
+; make another string-split referencing read-char.
 (define (string-split-spec str)
   (splt str '()))
 (define (splt str lst)
@@ -174,7 +175,11 @@
   (fprintf (current-output-port) (if (empty? stk*) "\n" (string-join (list (pop!) ";~n") "")))
   (main))
 
-#;(define (main-2)
-  ())
+(define (main-2)
+  (let ([i (open-input-file "test.txt")])
+    (define (per-line stk) (let ([x (read-line i)])
+      (if (eof-object? x) stk
+          (per-line (process-line (string-split-spec x) stk)))))
+    (per-line '())))
 
 (main)
