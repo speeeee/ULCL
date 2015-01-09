@@ -1,5 +1,7 @@
-#lang racket
-(require "parapp.rkt")
+#lang racket/base
+(require "parapp.rkt"
+         racket/list
+         racket/string)
 
 ;NOTE: the source code isn't anything special.
 
@@ -175,11 +177,14 @@
   (fprintf (current-output-port) (if (empty? stk*) "\n" (string-join (list (pop!) ";~n") "")))
   (main))
 
-(define (main-2)
-  (let ([i (open-input-file "test.txt")])
+(define (main-2+ cla)
+  (let ([i (open-input-file cla)])
     (define (per-line stk) (let ([x (read-line i)])
       (if (eof-object? x) stk
           (per-line (process-line (string-split-spec x) stk)))))
     (per-line '())))
+(define (main-2)
+  (main-2+ (car (vector->list (current-command-line-arguments))))
+  (fprintf (current-output-port) (if (empty? stk*) "\n" (string-join (list (pop!) ";~n") ""))))
 
-(main)
+(main-2)
