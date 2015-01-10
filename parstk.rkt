@@ -96,7 +96,7 @@
            (fprintf (current-output-port) ") {~n   " )
            (process-line (map (λ (x) (if (and (equal? (second x) 'lit) (equal? (second (lex (car x))) 'id)) 
                                          (list->string (append (list #\') (string->list (car x)))) (car x))) c) '()) 
-           (fprintf (current-output-port) "~a;~n" (pop!)) (fprintf (current-output-port) "}~n"))]
+           (fprintf (current-output-port) "~a;~n" (polish (pop!))) (fprintf (current-output-port) "}~n"))]
         [(string=? (caar f) "eval")
          (let ([e (cdr (second f))])
            (process-line (map car e) '()))]
@@ -172,9 +172,18 @@
   (if (empty? (string->list str)) lst
       (splt (cadr (tok (string->list str) '())) (append lst (list (car (tok (string->list str) '())))))))
 
+(define (polish str)
+  (let ([s (filter (λ (x) (not (equal? x #\space))) (string->list str))])
+    (define (remove-commas i o)
+      (if (empty? i) o (if (= (length i) 1) (append o (list (car i)))
+          (if (and (equal? (car i) #\,) (equal? (second i) #\))) (remove-commas (cdr i) o)
+              (remove-commas (cdr i) (append o (list (car i))))))))
+    (list->string (remove-commas s '()))))
+
 (define (main)
   (write (process-line (string-split-spec (read-line)) '()))
-  (fprintf (current-output-port) (if (empty? stk*) "\n" (string-join (list (pop!) ";~n") "")))
+  (fprintf (current-output-port) (if (empty? stk*) "\n" 
+                                     (string-join (list (pop!) ";~n") "")))
   (main))
 
 (define (main-2+ cla)
@@ -184,7 +193,7 @@
           (per-line (process-line (string-split-spec x) stk)))))
     (per-line '())))
 (define (main-2)
-  (main-2+ (car (vector->list (current-command-line-arguments))))
-  (fprintf (current-output-port) (if (empty? stk*) "\n" (string-join (list (pop!) ";~n") ""))))
+  (main-2+ "test.ulcl")
+  (fprintf (current-output-port) (if (empty? stk*) "\n" (string-join (list (polish (pop!)) ";~n") ""))))
 
 (main-2)
