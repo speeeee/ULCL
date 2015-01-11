@@ -178,7 +178,14 @@
       (if (empty? i) o (if (= (length i) 1) (append o (list (car i)))
           (if (and (equal? (car i) #\,) (equal? (second i) #\))) (remove-commas (cdr i) o)
               (remove-commas (cdr i) (append o (list (car i))))))))
-    (list->string (remove-commas s '()))))
+    (define (change-ops i o)
+      (let ([test-op (case (car i) [(#\+) (list #\a #\d #\d)]
+                                     [(#\-) (list #\s #\u #\b)]
+                                     [(#\*) (list #\t #\i)] [(#\/) (list #\d #\i #\v)]
+                                     [else (list (car i))])])
+        (if (empty? i) o 
+            (if (= (length i) 1) (append o test-op) (change-ops (cdr i) (append o test-op))))))
+    (list->string (change-ops (remove-commas s '()) '()))))
 
 (define (main)
   (write (process-line (string-split-spec (read-line)) '()))
