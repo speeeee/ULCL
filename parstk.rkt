@@ -28,7 +28,8 @@
 (define funs* (list (list "+" '("X" "Y") (list (list "&" 'ret)))
                     (list ":" '("name" "params" "output" "def") (list (list "$" 'spec)))
                     (list "eval" '("a") '())
-                    (list "%OUT" '("a") '())))
+                    (list "%OUT" '("a") '())
+                    (list "if" '("a" "b" "c") '())))
 
 ;(define cla (current-command-line-arguments))
 
@@ -103,6 +104,11 @@
         [(string=? (caar f) "%OUT")
          (let ([e (second f)])
            (fprintf (current-output-port) (car e)))]
+        [(string=? (caar f) "if")
+         (let ([a (cdr (second f))] [b (cdr (third f))] [c (cdr (fourth f))])
+           (map (λ (x) (process-line (map car x) '())) (list a b c))
+           (fprintf (current-output-port) "if(~a) {~n  ~a;~n}~nelse {~n  ~a;~n}~n"
+                    (polish (pop!)) (polish (pop!)) (polish (pop!))))]
         [else (let ([o (open-output-string)])
          (begin (fprintf o "~a(" (caar f))
              (map (lambda (x) (if (and (list? (car x)) (equal? (second (car x)) 'full)) 
