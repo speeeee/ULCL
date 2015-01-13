@@ -206,7 +206,7 @@
           (per-line (process-line (string-split-spec x) stk)))))
     (per-line '())))
 (define (main-2)
-  (main-2+ "test.ulcl")
+  (main-2+ (if (empty? (vector->list (current-command-line-arguments))) "test.ulcl" (car (vector->list (current-command-line-arguments)))))
   (fprintf (current-output-port) (if (empty? stk*) "\n" (string-join (list (polish (pop!)) ";~n") ""))))
 
 (main-2)
