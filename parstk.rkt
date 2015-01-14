@@ -94,10 +94,12 @@
            (fprintf (current-output-port) "~a ~a(" (if (empty? d) "void" (caar d)) (caar (cdr f)))
            (for ([i (in-range 0 (length b))] [o (map car b)]) 
              (fprintf (current-output-port) "~a a~a, " o i))
-           (fprintf (current-output-port) ") {~n   " )
+           (fprintf (current-output-port) ") {~n" )
            (process-line (map (λ (x) (if (and (equal? (second x) 'lit) (equal? (second (lex (car x))) 'id)) 
-                                         (list->string (append (list #\') (string->list (car x)))) (car x))) c) '()) 
-           (fprintf (current-output-port) "~a;~n" (polish (pop!))) (fprintf (current-output-port) "}~n"))]
+                                         (list->string (append (list #\') (string->list (car x)))) (car x))) c) '())
+           (let ([lst (stk->list! '())])
+             (map (λ (x) (fprintf (current-output-port) "  ~a;~n" x)) lst))
+           (fprintf (current-output-port) "}~n"))]
         [(string=? (caar f) "eval")
          (let ([e (cdr (second f))])
            (process-line (map car e) '()))]
@@ -193,6 +195,9 @@
             (if (= (length i) 1) (append o test-op) (change-ops (cdr i) (append o test-op))))))
     (list->string (change-ops (remove-commas s '()) '()))))
 
+(define (stk->list! stk)
+  (if (empty? stk*) (reverse stk) (stk->list! (append stk (list (polish (pop!))))))) 
+
 (define (main)
   (write (process-line (string-split-spec (read-line)) '()))
   (fprintf (current-output-port) (if (empty? stk*) "\n" 
@@ -207,6 +212,9 @@
     (per-line '())))
 (define (main-2)
   (main-2+ (if (empty? (vector->list (current-command-line-arguments))) "test.ulcl" (car (vector->list (current-command-line-arguments)))))
-  (fprintf (current-output-port) (if (empty? stk*) "\n" (string-join (list (polish (pop!)) ";~n") ""))))
+  (let ([lst (stk->list! '())])
+    #;(fprintf (current-output-port) (if (empty? stk*) "\n" (string-join (list (polish (pop!)) ";~n") "")))
+    (map (λ (x) (fprintf (current-output-port) (string-join (list x ";~n") ""))) lst)
+    (fprintf (current-output-port) "~n")))
 
 (main-2)
