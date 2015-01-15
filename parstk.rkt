@@ -25,8 +25,7 @@
                      (set! stk* (ret-pop stk*)) 
                      x)))
 
-(define funs* (list (list "+" '("X" "Y") (list (list "&" 'ret)))
-                    (list ":" '("name" "params" "output" "def") '())
+(define funs* (list (list ":" '("name" "params" "output" "def") '())
                     (list "eval" '("a") '())
                     (list "%OUT" '("a") '())
                     (list "if" '("a" "b" "c") '())
@@ -34,7 +33,9 @@
 
 ;(define cla (current-command-line-arguments))
 
-; TODO: make a push-n~
+(define f* '())
+(define uf* '())
+
 (define (push-n~ stk lst)
   (if (empty? lst) stk (push-n~ (push~ stk (car lst)) (cdr lst))))
 
@@ -58,18 +59,21 @@
                                          (append (cdr (second (cdr f))) (cdr (fourth (cdr f)))))])
            (set! funs* (push funs* (list (caar (cdr f)) b 
                                          (make-list (length d) (list "&" 'ret)))))
-           (fprintf (current-output-port) "(define (~a " (caar (cdr f)))
-           (map (λ (x) (fprintf (current-output-port) "~a " x)) (map car b))
-           (fprintf (current-output-port) ")~n   " )
+           (fprintf uf* (car (pop funs*))) (fprintf uf* " {+ ")
+           (map (λ (x) (fprintf uf* "~a " x)) (second (pop funs*))) (fprintf uf* "+} {- ")
+           (map (λ (x) (fprintf uf* "~a " x)) (third (pop funs*))) (fprintf uf* "-}~n")
+           (fprintf f* "(define (~a " (caar (cdr f)))
+           (map (λ (x) (fprintf f* "~a " x)) (map car b))
+           (fprintf f* ")~n   " )
            (process-line (map (λ (x) (if (and (equal? (second x) 'lit) (equal? (second (lex (car x))) 'id)) 
                                          (list->string (append (list #\') (string->list (car x)))) (car x))) c) '()) 
-           (fprintf (current-output-port) (pop!)) (fprintf (current-output-port) ")~n"))]
+           (fprintf f* (pop!)) (fprintf f* ")~n"))]
         [(string=? (caar f) "eval")
          (let ([e (cdr (second f))])
            (process-line (map car e) '()))]
         [(string=? (caar f) "%OUT")
          (let ([e (cdar (second f))])
-           (fprintf (current-output-port) (car e)))]
+           (fprintf f* (car e)))]
         [else (let ([o (open-output-string)])
          (begin (fprintf o "(~a " (caar f))
              (map (lambda (x) (if (and (list? (car x)) (equal? (second (car x)) 'full)) 
@@ -77,7 +81,7 @@
                                          (map (λ (y) (fprintf o "~a " (car y))) (cdr x))
                                          (fprintf o ") "))
                                   (fprintf o "~a " 
-                                           (if (equal? (second x) 'ret) (pop!) (car x))))) (cdr f))
+                                           (if (equal? (second x) 'ret) (polish (pop!)) (car x))))) (cdr f))
              (fprintf o ")~n") (push! (get-output-string o))))]))
 (define (out-c f) ; same as out-rkt but prints C instead; will probably take out
                   ; out-rkt all together once I can effectively print C.
@@ -92,29 +96,37 @@
                                                  (cdr (fourth (cdr f)))))])
            (set! funs* (push funs* (list (caar (cdr f)) b 
                                          (make-list (length d) (list "&" 'ret)))))
-           (fprintf (current-output-port) "~a ~a(" (if (empty? d) "void" (caar d)) (caar (cdr f)))
-           (for ([i (in-range 0 (length b))] [o (map car b)]) 
-             (fprintf (current-output-port) "~a a~a, " o i))
-           (fprintf (current-output-port) ") {~n" )
+           (fprintf uf* (car (pop funs*))) (fprintf uf* " {+ ")
+           (map (λ (x) (fprintf uf* "~a " x)) (map car (second (pop funs*)))) (fprintf uf* "+} {- ")
+           (map (λ (x) (fprintf uf* "~a " x)) (map car d)) (fprintf uf* "-}~n")
+           (fprintf f* "~a ~a(" (if (empty? d) "void" (caar d)) (caar (cdr f)))
+           (for ([i (in-range 0 (- (length b) 1))] [o (map car b)]) 
+             (fprintf f* "~a a~a, " o i))
+           (fprintf f* "~a a~a) {~n" (car (last b)) (- (length b) 1))
            (process-line (map (λ (x) (if (and (equal? (second x) 'lit) (equal? (second (lex (car x))) 'id)) 
                                          (list->string (append (list #\') (string->list (car x)))) (car x))) c) '())
            (let ([lst (stk->list! '())])
-             (map (λ (x) (fprintf (current-output-port) "  ~a;~n" x)) lst))
-           (fprintf (current-output-port) "}~n"))]
+             (map (λ (x) (fprintf f* "  ~a;~n" x)) lst))
+           (fprintf f* "}~n"))]
         [(string=? (caar f) "eval")
          (let ([e (cdr (second f))])
            (process-line (map car e) '()))]
         [(string=? (caar f) "%OUT")
          (let ([e (second f)])
-           (fprintf (current-output-port) (car e)))]
+           (fprintf f* (if (char=? (car (string->list (car e))) #\") (list->string (cdr (ret-pop (string->list (car e)))))
+                           (car e))))]
         [(string=? (caar f) "in-ffi")
          (let ([e (second f)])
-           (fprintf (current-output-port) "#include <~a.h>~n" (car e))
-           (in-ffi (open-input-file (string-join (list (car e) ".ufns") ""))))]
+           (fprintf f* "#include <~a.h>~n" (car e))
+           (imp (open-input-file (string-join (list (car e) ".ufns") ""))))]
+        [(string=? (caar f) "import")
+         (let ([e (second f)])
+           (fprintf f* "#include \"~a.h\"~n" (car e))
+           (imp (open-input-file (string-join (list (car e) ".ufns") ""))))]
         [(string=? (caar f) "if")
          (let ([a (cdr (second f))] [b (cdr (third f))] [c (cdr (fourth f))])
            (map (λ (x) (process-line (map car x) '())) (list a b c))
-           (fprintf (current-output-port) "if(~a) {~n  ~a;~n}~nelse {~n  ~a;~n}~n"
+           (fprintf f* "if(~a) {~n  ~a;~n}~nelse {~n  ~a;~n}~n"
                     (polish (pop!)) (polish (pop!)) (polish (pop!))))]
         [else (let ([o (open-output-string)])
          (begin (fprintf o "~a(" (caar f))
@@ -200,21 +212,21 @@
             (if (= (length i) 1) (append o test-op) (change-ops (cdr i) (append o test-op))))))
     (list->string (change-ops (remove-commas s '()) '()))))
 
-(define (in-ffi f)
+(define (imp f)
   (let* ([s (string-split (read-line f))] [in (if (not (empty? s)) 
                                                   (takef (cddr s) (λ (x) (not (string=? x "+}"))))
                                                   '())]
          [out (if (not (empty? s)) (takef (drop s (+ (length in) 4)) (λ (x) (not (string=? x "-}")))) '())])
     (if (empty? s) '()
         (begin (set! funs* (push funs* (list (car s) in out)))
-               (in-ffi f)))))
+               (imp f)))))
    
 (define (stk->list! stk)
   (if (empty? stk*) (reverse stk) (stk->list! (append stk (list (polish (pop!))))))) 
 
 (define (main)
   (write (process-line (string-split-spec (read-line)) '()))
-  (fprintf (current-output-port) (if (empty? stk*) "\n" 
+  (fprintf f* (if (empty? stk*) "\n" 
                                      (string-join (list (pop!) ";~n") "")))
   (main))
 
@@ -224,11 +236,13 @@
       (if (eof-object? x) stk
           (per-line (process-line (string-split-spec x) stk)))))
     (per-line '())))
-(define (main-2)
-  (main-2+ (if (empty? (vector->list (current-command-line-arguments))) "test.ulcl" (car (vector->list (current-command-line-arguments)))))
+(define (main-2) (let* ([c (vector->list (current-command-line-arguments))])
+  (set! f* (if (empty? c) '() (open-output-file (string-join (list (car c) ".c") "") #:exists 'replace)))
+  (set! uf* (if (empty? c) '() (open-output-file (string-join (list (car c) ".ufns") "") #:exists 'replace)))
+  (main-2+ (if (empty? c) (string-join (list (path->string (current-directory)) "test.ulcl") "") (string-join (list (car c) ".ulcl") "")))
   (let ([lst (stk->list! '())])
-    #;(fprintf (current-output-port) (if (empty? stk*) "\n" (string-join (list (polish (pop!)) ";~n") "")))
-    (map (λ (x) (fprintf (current-output-port) (string-join (list x ";~n") ""))) lst)
-    (fprintf (current-output-port) "~n")))
+    (map (λ (x) (fprintf f* (string-join (list x ";~n") ""))) lst)
+    (fprintf f* "~n")))
+  (close-output-port f*) (close-output-port uf*))
 
 (main-2)
