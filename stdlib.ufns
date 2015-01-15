@@ -1,0 +1,30 @@
+atof {+ string +} {- double -}
+atoi {+ string +} {- int -}
+atol {+ string +} {- long -}
+strtod {+ string +} {- double -}
+strtol {+ string +} {- long -}
+strtoul {+ string +} {- ulong -}
+
+rand {+ +} {- int -}
+srand {+ int +} {- -}
+
+calloc {+ int int +} {- -}
+free {+ int +} {- -}
+realloc {+ int +} {- -}
+malloc {+ int +} {- -}
+
+abort {+ +} {- -}
+exit {+ int +} {- -}
+getenv {+ string +} {- string -}
+system {+ string +} {- -}
+_Exit {+ int +} {- -}
+
+abs {+ int +} {- int -}
+div {+ int int +} {- int -}
+labs {+ long +} {- long -}
+ldiv {+ long long +} {- long -}
+
+
+
+
+
