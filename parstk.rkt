@@ -26,10 +26,11 @@
                      x)))
 
 (define funs* (list (list "+" '("X" "Y") (list (list "&" 'ret)))
-                    (list ":" '("name" "params" "output" "def") (list (list "$" 'spec)))
+                    (list ":" '("name" "params" "output" "def") '())
                     (list "eval" '("a") '())
                     (list "%OUT" '("a") '())
-                    (list "if" '("a" "b" "c") '())))
+                    (list "if" '("a" "b" "c") '())
+                    (list "in-ffi" '("a") '())))
 
 ;(define cla (current-command-line-arguments))
 
@@ -106,6 +107,10 @@
         [(string=? (caar f) "%OUT")
          (let ([e (second f)])
            (fprintf (current-output-port) (car e)))]
+        [(string=? (caar f) "in-ffi")
+         (let ([e (second f)])
+           (fprintf (current-output-port) "#include <~a.h>~n" (car e))
+           (in-ffi (open-input-file (string-join (list (car e) ".ufns") ""))))]
         [(string=? (caar f) "if")
          (let ([a (cdr (second f))] [b (cdr (third f))] [c (cdr (fourth f))])
            (map (λ (x) (process-line (map car x) '())) (list a b c))
@@ -195,6 +200,15 @@
             (if (= (length i) 1) (append o test-op) (change-ops (cdr i) (append o test-op))))))
     (list->string (change-ops (remove-commas s '()) '()))))
 
+(define (in-ffi f)
+  (let* ([s (string-split (read-line f))] [in (if (not (empty? s)) 
+                                                  (takef (cddr s) (λ (x) (not (string=? x "+}"))))
+                                                  '())]
+         [out (if (not (empty? s)) (takef (drop s (+ (length in) 4)) (λ (x) (not (string=? x "-}")))) '())])
+    (if (empty? s) '()
+        (begin (set! funs* (push funs* (list (car s) in out)))
+               (in-ffi f)))))
+   
 (define (stk->list! stk)
   (if (empty? stk*) (reverse stk) (stk->list! (append stk (list (polish (pop!))))))) 
 
