@@ -28,6 +28,7 @@
 (define funs* (list (list ":" '("name" "params" "output" "def") '())
                     (list "eval" '("a") '())
                     (list "%OUT" '("a") '())
+                    (list "%RET" '() '())
                     (list "if" '("a" "b" "c") '())
                     (list "in-ffi" '("a") '())))
 
@@ -49,6 +50,21 @@
                                   (- (length (third f)) (length (second f))))]
                                [(list? (car x)) (add-up x)]
                                [else 0])) stk)))
+
+(define (taken ls)
+  (define (taken$ lst nlst e)
+    (cond [(or (equal? (cadar lst) 'open)
+               (equal? (cadar lst) 'lopen)) (taken$ (cdr lst) nlst (add1 e))]
+          [(or (equal? (cadar lst) 'close) 
+               (equal? (cadar lst) 'lclos)) (taken$ (cdr lst) nlst (sub1 e))]
+          [(equal? (cadar lst) 'id) (if (= e 0) nlst
+                                        (taken$ (cdr lst) (push nlst (car lst)) (add1 e)))]
+          [else (taken$ (cdr lst) (push nlst (car lst)) (add1 e))]))
+  (taken$ ls '() 0))
+
+(define (add-return lst)
+  (let ([c (taken (reverse lst))]) 
+    (append (take lst (- (length lst) (length c))) (list (list "%RET" 'id)) (drop lst (- (length lst) (length c))))))
 
 (define (out-rkt f)
   (cond [(string=? (caar f) ":")
@@ -93,7 +109,8 @@
                                          (append (map (λ (x) (list (string-join (list "'a" (number->string x)) "") 
                                                                    'lit)) 
                                                       (range 0 (length (cdr (second (cdr f)))))) 
-                                                 (cdr (fourth (cdr f)))))])
+                                                 (cdr (fourth (cdr f)))))]
+                                  [e (add-return c)])
            (set! funs* (push funs* (list (caar (cdr f)) b 
                                          (make-list (length d) (list "&" 'ret)))))
            (fprintf uf* (car (pop funs*))) (fprintf uf* " {+ ")
@@ -102,12 +119,13 @@
            (fprintf f* "~a ~a(" (if (empty? d) "void" (caar d)) (caar (cdr f)))
            (for ([i (in-range 0 (- (length b) 1))] [o (map car b)]) 
              (fprintf f* "~a a~a, " o i))
-           (fprintf f* "~a a~a) {~n" (car (last b)) (- (length b) 1))
+           (if (empty? b) (fprintf f* ") {~n")
+               (fprintf f* "~a a~a) {~n" (car (last b)) (- (length b) 1)))
            (process-line (map (λ (x) (if (and (equal? (second x) 'lit) (equal? (second (lex (car x))) 'id)) 
-                                         (list->string (append (list #\') (string->list (car x)))) (car x))) c) '())
+                                         (list->string (append (list #\') (string->list (car x)))) (car x))) e) '())
            (let ([lst (stk->list! '())])
              (map (λ (x) (fprintf f* "  ~a;~n" x)) lst))
-           (fprintf f* "}~n"))]
+           (fprintf f* "; }~n"))]
         [(string=? (caar f) "eval")
          (let ([e (cdr (second f))])
            (process-line (map car e) '()))]
@@ -115,6 +133,8 @@
          (let ([e (second f)])
            (fprintf f* (if (char=? (car (string->list (car e))) #\") (list->string (cdr (ret-pop (string->list (car e)))))
                            (car e))))]
+        [(string=? (caar f) "%RET")
+         (fprintf f* "return ")]
         [(string=? (caar f) "in-ffi")
          (let ([e (second f)])
            (fprintf f* "#include <~a.h>~n" (car e))
