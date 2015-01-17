@@ -1,0 +1,25 @@
+remove {+ string +} {- int -}
+rename {+ string string +} {- int -}
+tmpfile {+ +} {- FILE* -}
+tmpnam {+ string +} {- string -}
+fclose {+ FILE* +} {- int -}
+fflush {+ FILE* +} {- int -}
+fopen {+ string +} {- int -}
+fprintf {+ FILE* string +} {- -}
+fscanf {+ FILE* string +} {- -}
+printf {+ string +} {- -}
+scanf {+ string FILE* +} {- -} 
+sprintf {+ string string +} {- -}
+fgetc {+ FILE* +} {- int -}
+fgets {+ string int FILE* +} {- string -}
+fputc {+ int FILE* +} {- -}
+fputs {+ string FILE* +} {- -}
+getc {+ FILE* +} {- int -}
+getchar {+ +} {- int -}
+gets {+ +} {- string -}
+putc {+ int FILE* +} {- -}
+putchar {+ int +} {- -}
+puts {+ string +} {- -}
+ungetc {+ int FILE* +} {- -}
+fseek {+ FILE* long int +} {- -}
+ftell {+ FILE* +} {- long -}
