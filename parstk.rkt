@@ -1,7 +1,8 @@
 #lang racket/base
 (require "parapp.rkt"
          racket/list
-         racket/string)
+         racket/string
+         racket/dict)
 
 ;NOTE: the source code isn't anything special.
 
@@ -26,6 +27,7 @@
                      x)))
 
 (define funs* (list (list ":" '("name" "params" "output" "def") '())
+                    (list "<<" '("val" "name") '())
                     (list "eval" '("a") '())
                     (list "%OUT" '("a") '())
                     (list "%RET" '() '())
@@ -129,6 +131,8 @@
         [(string=? (caar f) "eval")
          (let ([e (cdr (second f))])
            (process-line (map car e) '()))]
+        [(string=? (caar f) "<<")
+         (fprintf f* "~a ~a = ~a;~n" "[type]" (caaddr f) (caadr f))]
         [(string=? (caar f) "%OUT")
          (let ([e (second f)])
            (fprintf f* (if (char=? (car (string->list (car e))) #\") (list->string (cdr (ret-pop (string->list (car e)))))
