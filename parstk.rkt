@@ -27,7 +27,7 @@
                      x)))
 
 (define funs* (list (list ":" '("name" "params" "output" "def") '())
-                    (list "<<" '("val" "name") '())
+                    (list "<<" '("val" "type" "name") '())
                     (list "eval" '("a") '())
                     (list "%OUT" '("a") '())
                     (list "%RET" '() '())
@@ -132,7 +132,7 @@
          (let ([e (cdr (second f))])
            (process-line (map car e) '()))]
         [(string=? (caar f) "<<")
-         (fprintf f* "~a ~a = ~a;~n" "[type]" (caaddr f) (caadr f))]
+         (fprintf f* "~a ~a = ~a;~n" (caaddr f) (car (cadddr f)) (caadr f))]
         [(string=? (caar f) "%OUT")
          (let ([e (second f)])
            (fprintf f* (if (char=? (car (string->list (car e))) #\") (list->string (cdr (ret-pop (string->list (car e)))))
