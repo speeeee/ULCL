@@ -3,7 +3,7 @@
 (provide push pop ret-pop pop-n
          push-n lex get-tok find-fun
          cons-fun push-cons fcons? 
-         full-cons? exec-cons)
+         full-cons? exec-cons fexists?)
 
 ; stack-based cell-based(?) partial application-based language
 
@@ -51,6 +51,8 @@
         (push (car (pop-n stk (+ 1 (length (second f))))) g))))
 (define (fcons? f fs)
   (and (not (empty? f)) (ormap (lambda (x) (equal? (car f) x)) fs)))
+(define (fexists? s fs)
+  (ormap (lambda (x) (string=? x s)) (map car fs)))
 (define (full-cons? f) (= (length (cdr f)) (length (second (car f)))))
 (define (exec-cons stk fs)
   (push-n (push-n (ret-pop (push-cons stk fs)) (cdr (cons-fun stk fs))) (caddar (cons-fun stk fs))))
