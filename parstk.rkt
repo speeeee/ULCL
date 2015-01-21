@@ -20,6 +20,8 @@
 ;     are popped to be used in another expression; it's to keep the stack
 ;     outside of the compiled program.
 (define stk* '())
+;USE: line number
+(define ln* 0)
 (define (push! s) (set! stk* (push stk* s)))
 (define (pop!) (if (empty? stk*) '()
                    (let ([x (pop stk*)])
@@ -198,8 +200,10 @@
            (test-full e))] ; function test
         [(equal? (second s) 'lit) (push stk s)]
         [(equal? (second s) 'id) 
-         (let ([e (push-cons (push stk s) funs*)])
-           (test-full e))]
+         (let ([e (if (fexists? (car s) funs*) (push-cons (push stk s) funs*) '())])
+           (if (empty? e) (begin (fprintf (current-output-port) "ERROR:~a: function `~a' does not exist.~n" ln* (car s))
+                                 stk)
+               (test-full e)))]
         [else (push stk s)]))
 
 (define (process-line s stk)
@@ -256,7 +260,7 @@
 
 (define (main-2+ cla)
   (let ([i (open-input-file cla)])
-    (define (per-line stk) (let ([x (read-line i)])
+    (define (per-line stk) (let ([x (read-line i)]) (set! ln* (add1 ln*))
       (if (eof-object? x) stk
           (per-line (process-line (string-split-spec x) stk)))))
     (per-line '())))
