@@ -34,7 +34,8 @@
                     (list "%OUT" '("a") '())
                     (list "%RET" '() '())
                     (list "if" '("a" "b" "c") '())
-                    (list "in-ffi" '("a") '())))
+                    (list "in-ffi" '("a") '())
+                    (list "%err" '("str") '())))
 
 ;(define cla (current-command-line-arguments))
 
@@ -154,6 +155,8 @@
            (map (λ (x) (process-line (map car x) '())) (list a b c))
            (fprintf f* "if(~a) {~n  ~a;~n}~nelse {~n  ~a;~n}~n"
                     (polish (pop!)) (polish (pop!)) (polish (pop!))))]
+        [(string=? (caar f) "%err")
+         (fprintf (current-output-port) "ERROR:~a: ~a~n" ln* (list->string (cdr (ret-pop (string->list (car (second f)))))))]
         [else (let ([o (open-output-string)])
          (begin (fprintf o "~a(" (caar f))
              (map (lambda (x) (if (and (list? (car x)) (equal? (second (car x)) 'full)) 
