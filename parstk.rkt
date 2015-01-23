@@ -41,6 +41,7 @@
 
 (define f* '())
 (define uf* '())
+(define h* '())
 
 (define (push-n~ stk lst)
   (if (empty? lst) stk (push-n~ (push~ stk (car lst)) (cdr lst))))
@@ -121,7 +122,7 @@
            (fprintf uf* (car (pop funs*))) (fprintf uf* " {+ ")
            (map (λ (x) (fprintf uf* "~a " x)) (map car (second (pop funs*)))) (fprintf uf* "+} {- ")
            (map (λ (x) (fprintf uf* "~a " x)) (map car d)) (fprintf uf* "-}~n")
-           (fprintf f* "~a ~a(" (if (empty? d) "void" (caar d)) (caar (cdr f)))
+           (fprintf f* "~a ~a(" (if (empty? d) "void" (caar d)) (polish (caar (cdr f))))
            (for ([i (in-range 0 (- (length b) 1))] [o (map car b)]) 
              (fprintf f* "~a a~a, " o i))
            (if (empty? b) (fprintf f* ") {~n")
@@ -270,10 +271,29 @@
 (define (main-2) (let* ([c (vector->list (current-command-line-arguments))])
   (set! f* (if (empty? c) '() (open-output-file (string-join (list (car c) ".c") "") #:exists 'replace)))
   (set! uf* (if (empty? c) '() (open-output-file (string-join (list (car c) ".ufns") "") #:exists 'replace)))
+  (set! h* (if (empty? c) '() (open-output-file (string-join (list (car c) ".h") "") #:exists 'replace)))
   (main-2+ (if (empty? c) (string-join (list (path->string (current-directory)) "test.ulcl") "") (string-join (list (car c) ".ulcl") "")))
   (let ([lst (stk->list! '())])
     (map (λ (x) (fprintf f* (string-join (list x ";~n") ""))) lst)
-    (fprintf f* "~n")))
-  (close-output-port f*) (close-output-port uf*))
+    (fprintf f* "~n"))
+  (close-output-port f*) (close-output-port uf*)
+  (make-h (if (empty? c) '() 
+              (open-input-file (string-join (list (car c) ".ufns") ""))))
+  (close-output-port h*)))
 
+(define (make-h f)
+  (let* ([e (read-line f)] [s (if (not (eof-object? e)) (string-split e) '())]
+                            [in (if (not (empty? s)) 
+                                    (takef (cddr s) (λ (x) (not (string=? x "+}"))))
+                                    '())]
+         [out (if (not (empty? s)) (takef (drop s (+ (length in) 4)) (λ (x) (not (string=? x "-}")))) '())])
+    (if (empty? s) '()
+        (begin (fprintf h* "~a ~a(" (car out) (polish (car s)))
+               (for ([i (in-range 0 (- (length in) 1))] [o in]) 
+                 (fprintf h* "~a a~a, " o i))
+               (if (empty? in) (fprintf h* ");~n")
+                   (fprintf h* "~a a~a);~n" (last in) (- (length in) 1)))
+               (make-h f)))))
+            
+    
 (main-2)
