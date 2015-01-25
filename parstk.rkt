@@ -146,10 +146,12 @@
         [(string=? (caar f) "in-ffi")
          (let ([e (second f)])
            (fprintf f* "#include <~a.h>~n" (car e))
+           (fprintf h* "#include <~a.h>~n" (car e))
            (imp (open-input-file (string-join (list (car e) ".ufns") ""))))]
         [(string=? (caar f) "import")
          (let ([e (second f)])
            (fprintf f* "#include \"~a.h\"~n" (car e))
+           (fprintf h* "#include \"~a.h\"~n" (car e))
            (imp (open-input-file (string-join (list (car e) ".ufns") ""))))]
         [(string=? (caar f) "if")
          (let ([a (cdr (second f))] [b (cdr (third f))] [c (cdr (fourth f))])
