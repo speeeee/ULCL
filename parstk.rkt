@@ -35,6 +35,7 @@
                     (list "%RET" '() '())
                     (list "if" '("a" "b" "c") '())
                     (list "in-ffi" '("a") '())
+                    (list "import" '("a") '())
                     (list "%err" '("str") '())))
 
 ;(define cla (current-command-line-arguments))
