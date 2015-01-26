@@ -1,0 +1,7 @@
+in-ffi 'stdlib
+
+'+ { 'int 'int } { 'int } : { %OUT "+" %OUT %OUT ";~n" %OUT }
+'- { 'int 'int } { 'int } : { %OUT "-" %OUT %OUT ";~n" %OUT }
+'* { 'int 'int } { 'int } : { %OUT "*" %OUT %OUT ";~n" %OUT }
+'/ { 'int 'int } { 'int } : { %OUT "/" %OUT %OUT ";~n" %OUT }
+
