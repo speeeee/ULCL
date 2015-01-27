@@ -248,12 +248,14 @@
     (list->string (change-ops (remove-commas s '()) '()))))
 
 (define (imp f)
-  (let* ([s (string-split (read-line f))] [in (if (not (empty? s)) 
-                                                  (takef (cddr s) (λ (x) (not (string=? x "+}"))))
-                                                  '())]
+  (let* ([e (read-line f)]
+         [s (string-split (if (eof-object? e) "" e))] [in (if (not (empty? s)) 
+                                                              (takef (cddr s) (λ (x) (not (string=? x "+}"))))
+                                                              '())]
          [out (if (not (empty? s)) (takef (drop s (+ (length in) 4)) (λ (x) (not (string=? x "-}")))) '())])
     (if (empty? s) '()
-        (begin (set! funs* (push funs* (list (car s) in out)))
+        (begin (set! funs* (push funs* (list (car s) (map (λ (x) (append (list x) (list 'lit))) in) 
+                                                     (map (λ (x) (append (list x) (list 'ret))) out))))
                (imp f)))))
    
 (define (stk->list! stk)
