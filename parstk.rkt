@@ -30,6 +30,7 @@
 
 (define funs* (list (list ":" '("name" "params" "output" "def") '())
                     (list "<<" '("val" "type" "name") '())
+                    (list "drop" '("a") '())
                     (list "eval" '("a") '())
                     (list "%OUT" '("a") '())
                     (list "%RET" '() '())
@@ -136,6 +137,7 @@
         [(string=? (caar f) "eval")
          (let ([e (cdr (second f))])
            (process-line (map car e) '()))]
+        [(string=? (caar f) "drop") '()]
         [(string=? (caar f) "<<")
          (fprintf f* "~a ~a = ~a;~n" (caaddr f) (car (cadddr f)) (caadr f))]
         [(string=? (caar f) "%OUT")
