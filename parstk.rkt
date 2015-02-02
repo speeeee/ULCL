@@ -27,11 +27,15 @@
                    (let ([x (pop stk*)])
                      (set! stk* (ret-pop stk*)) 
                      x)))
+(define (pop-all!) (if (not (empty? stk*))
+  (begin (fprintf f* (string-join (list (polish (pop!)) ";~n") ""))
+         (pop-all!)) '()))
 
 (define funs* (list (list ":" '("name" "params" "output" "def") '())
                     (list "<<" '("val" "type" "name") '())
                     (list "drop" '("a") '())
                     (list "eval" '("a") '())
+                    (list "MAIN:" '("quot") '())
                     (list "%OUT" '("a") '())
                     (list "%RET" '() '())
                     (list "if" '("a" "b" "c") '())
@@ -138,6 +142,13 @@
          (let ([e (cdr (second f))])
            (process-line (map car e) '()))]
         [(string=? (caar f) "drop") '()]
+        [(string=? (caar f) "MAIN:")
+         (begin (fprintf f* "int main(int argc, char **argv) {  ~n")
+                #;(process-line (append (list "eval") (map (λ (x) (if (and (equal? (second x) 'lit) (equal? (second (lex (car x))) 'id))
+                                                  (list->string (append (list #\') (string->list (car x)))) (car x))) (cdr f))) '())
+                (test-full (list (list (list "eval" '("a") '()) (car (cdr f)))))
+                (pop-all!)
+                (fprintf f* "}~n"))]
         [(string=? (caar f) "<<")
          (fprintf f* "~a ~a = ~a;~n" (caaddr f) (car (cadddr f)) (caadr f))]
         [(string=? (caar f) "%OUT")
@@ -167,7 +178,8 @@
          (begin (fprintf o "~a(" (caar f))
              (map (lambda (x) (if (and (list? (car x)) (equal? (second (car x)) 'full)) 
                                   (begin (fprintf o "{")
-                                         (map (λ (y) (fprintf o "~a, " (car y))) (cdr x))
+                                         (map (λ (y) (if (equal? (second y) 'lopen) 
+                                                         (fprintf o "~a " (car y)) (fprintf o "~a, " (car y)))) (cdr x))
                                          (fprintf o "} "))
                                   (fprintf o "~a, " 
                                            (if (equal? (second x) 'ret) (pop!) (car x))))) (cdr f))

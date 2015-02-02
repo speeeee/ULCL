@@ -7,4 +7,3 @@ in-ffi 'stdio
 '/ { 'int 'int } { 'int } : { %RET %OUT "/" %OUT %OUT ";~n" %OUT }
 
 'nth { 'int 'int* } { 'void* } : { %RET %OUT "[" %OUT %OUT "];~n" %OUT }
-
