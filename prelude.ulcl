@@ -6,4 +6,8 @@ in-ffi 'stdio
 '* { 'int 'int } { 'int } : { %RET %OUT "*" %OUT %OUT ";~n" %OUT }
 '/ { 'int 'int } { 'int } : { %RET %OUT "/" %OUT %OUT ";~n" %OUT }
 
+'= { 'int 'int } { 'bool } : { %RET %OUT "==" %OUT %OUT ";~n" %OUT }
+'< { 'int 'int } { 'bool } : { %RET %OUT "<" %OUT %OUT ";~n" %OUT }
+'> { 'int 'int } { 'bool } : { %RET %OUT ">" %OUT %OUT ";~n" %OUT }
+
 'nth { 'int 'int* } { 'void* } : { %RET %OUT "[" %OUT %OUT "];~n" %OUT }

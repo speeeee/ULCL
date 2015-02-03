@@ -2,4 +2,7 @@
 - {+ int int +} {- int -}
 * {+ int int +} {- int -}
 / {+ int int +} {- int -}
+= {+ int int +} {- bool -}
+< {+ int int +} {- bool -}
+> {+ int int +} {- bool -}
 nth {+ int int* +} {- void* -}

@@ -256,6 +256,8 @@
       (let ([test-op (case (car i) [(#\+) (list #\a #\d #\d)]
                                      [(#\-) (list #\s #\u #\b)]
                                      [(#\*) (list #\t #\i)] [(#\/) (list #\d #\i #\v)]
+                                     [(#\=) (list #\e #\q #\u)] [(#\<) (list #\l #\e #\s)]
+                                     [(#\>) (list #\g #\r #\t)]
                                      [else (list (car i))])])
         (if (empty? i) o 
             (if (= (length i) 1) (append o test-op) (change-ops (cdr i) (append o test-op))))))
