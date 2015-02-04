@@ -64,19 +64,32 @@
                                [else 0])) stk)))
 
 (define (taken ls)
-  (define (taken$ lst nlst e)
+  (define (taken$ lst o e i) (displayln lst)
     (cond [(or (equal? (cadar lst) 'open)
-               (equal? (cadar lst) 'lopen)) (taken$ (cdr lst) nlst (add1 e))]
+               (equal? (cadar lst) 'lopen)) (taken$ (cdr lst) o (add1 e) i)]
           [(or (equal? (cadar lst) 'close) 
-               (equal? (cadar lst) 'lclos)) (taken$ (cdr lst) nlst (sub1 e))]
-          [(equal? (cadar lst) 'id) (if (= e 0) nlst
-                                        (taken$ (cdr lst) (push nlst (car lst)) (add1 e)))]
-          [else (taken$ (cdr lst) (push nlst (car lst)) (add1 e))]))
-  (taken$ ls '() 0))
+               (equal? (cadar lst) 'lclos)) (taken$ (cdr lst) o (sub1 e) (add1 i))]
+          [(equal? (cadar lst) 'id) (if (and (= e 0) (fexists? (caar lst) funs*)) 
+                                        (add1 (- (length (second (find-fun (caar lst) funs*))) o))
+                                        (taken$ (cdr lst) (add1 o) e i))]
+          [else (taken$ (cdr lst) (add1 o) e
+                        (if (= e 0) (add1 i) i))]))
+  (taken$ ls 0 0 0))
+
+#;(define (taken ls)
+  (define (taken$ lst e i)
+    (cond [(or (equal? (second (car lst)) 'open)
+               (equal? (second (car lst)) 'lopen)) (taken$ (cdr lst) (add1 e) (add1 i))]
+          [(or (equal? (second (car lst)) 'close) 
+               (equal? (second (car lst)) 'lclos)) (taken$ (cdr lst) (add1 e) (sub1 i))]
+          [(equal (second (car lst)) 'id) (if (= i 0) e (taken$ (cdr lst) (add1 e) i))])))
 
 (define (add-return lst)
   (let ([c (taken (reverse lst))]) 
-    (append (take lst (- (length lst) (length c))) (list (list "%RET" 'id)) (drop lst (- (length lst) (length c))))))
+    (append (take lst (- (length lst) c)) (list (list "%RET" 'id)) (drop lst (- (length lst) c)))))
+
+#;(define (add-return!)
+  (set! stk* (reverse (append (car (reverse stk*)) (list "return ") (cdr (reverse stk*))))))
 
 (define (out-rkt f)
   (cond [(string=? (caar f) ":")
@@ -168,10 +181,16 @@
            (fprintf h* "#include \"~a.h\"~n" (car e))
            (imp (open-input-file (string-join (list (car e) ".ufns") ""))))]
         [(string=? (caar f) "if")
-         (let ([a (cdr (second f))] [b (cdr (third f))] [c (cdr (fourth f))])
-           (map (λ (x) (process-line (map car x) '())) (list a b c))
-           (fprintf f* "if(~a) {~n  ~a;~n}~nelse {~n  ~a;~n}~n"
-                    (polish (pop!)) (polish (pop!)) (polish (pop!))))]
+         (let ([a (cdr (second f))] [b (add-return (cdr (third f)))] [c (add-return (cdr (fourth f)))])
+           (map (λ (x) (process-line (map car x) '())) (list a))
+           (fprintf f* "if(~a) {~n  "
+                    (polish (pop!)))
+           (process-line (map car b) '())
+           (map (λ (x) (fprintf f* "~a;~n  " x)) (map (λ (x) (polish x)) stk*)) (set! stk* '())
+           (fprintf f* "}~nelse {~n  ")
+           (process-line (map car c) '())
+           (map (λ (x) (fprintf f* "~a;~n  " x)) (map (λ (x) (polish x)) stk*))
+           (fprintf f* "}~n") (set! stk* '()))]
         [(string=? (caar f) "%err")
          (fprintf (current-output-port) "ERROR:~a: ~a~n" ln* (list->string (cdr (ret-pop (string->list (car (second f)))))))]
         [else (let ([o (open-output-string)])
