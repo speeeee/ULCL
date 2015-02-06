@@ -28,8 +28,9 @@
                      (set! stk* (ret-pop stk*)) 
                      x)))
 (define (pop-all!) (if (not (empty? stk*))
-  (begin (fprintf f* (string-join (list (polish (pop!)) ";~n") ""))
-         (pop-all!)) '()))
+  (let ([x (pop!)]) (displayln "\"~a\"" x)
+    (begin (fprintf f* (if (string=? x "return ") x (string-join (list (polish x) ";~n") "")))
+           (pop-all!))) '()))
 
 (define funs* (list (list ":" '("name" "params" "output" "def") '())
                     (list "<<" '("val" "type" "name") '())
@@ -64,7 +65,7 @@
                                [else 0])) stk)))
 
 (define (taken ls)
-  (define (taken$ lst o e i) (displayln lst)
+  (define (taken$ lst o e i) ; nothing is pop!'d before the return happens; reparalo.
     (cond [(or (equal? (cadar lst) 'open)
                (equal? (cadar lst) 'lopen)) (taken$ (cdr lst) o (add1 e) i)]
           [(or (equal? (cadar lst) 'close) 
@@ -86,6 +87,7 @@
 
 (define (add-return lst)
   (let ([c (taken (reverse lst))]) 
+    (append (take lst (- (length lst) c)) (list (list "%RET" 'id)) (drop lst (- (length lst) c)))
     (append (take lst (- (length lst) c)) (list (list "%RET" 'id)) (drop lst (- (length lst) c)))))
 
 #;(define (add-return!)
@@ -168,8 +170,10 @@
          (let ([e (second f)])
            (fprintf f* (if (char=? (car (string->list (car e))) #\") (list->string (cdr (ret-pop (string->list (car e)))))
                            (car e))))]
-        [(string=? (caar f) "%RET")
+        #;[(string=? (caar f) "%RET")
          (fprintf f* "return ")]
+        [(string=? (caar f) "%RET")
+         (push! "return ")]
         [(string=? (caar f) "in-ffi")
          (let ([e (second f)])
            (fprintf f* "#include <~a.h>~n" (car e))
@@ -186,10 +190,10 @@
            (fprintf f* "if(~a) {~n  "
                     (polish (pop!)))
            (process-line (map car b) '())
-           (map (λ (x) (fprintf f* "~a;~n  " x)) (map (λ (x) (polish x)) stk*)) (set! stk* '())
+           (map (λ (x) (fprintf f* (if (string=? x "return") "~a " "~a;~n  ") x)) (map (λ (x) (polish x)) stk*)) (set! stk* '())
            (fprintf f* "}~nelse {~n  ")
            (process-line (map car c) '())
-           (map (λ (x) (fprintf f* "~a;~n  " x)) (map (λ (x) (polish x)) stk*))
+           (map (λ (x) (fprintf f* (if (string=? x "return") "~a " "~a;~n  ") x)) (map (λ (x) (polish x)) stk*))
            (fprintf f* "}~n") (set! stk* '()))]
         [(string=? (caar f) "%err")
          (fprintf (current-output-port) "ERROR:~a: ~a~n" ln* (list->string (cdr (ret-pop (string->list (car (second f)))))))]
@@ -313,8 +317,8 @@
   (set! uf* (if (empty? c) '() (open-output-file (string-join (list (car c) ".ufns") "") #:exists 'replace)))
   (set! h* (if (empty? c) '() (open-output-file (string-join (list (car c) ".h") "") #:exists 'replace)))
   (main-2+ (if (empty? c) (string-join (list (path->string (current-directory)) "test.ulcl") "") (string-join (list (car c) ".ulcl") "")))
-  (let ([lst (stk->list! '())])
-    (map (λ (x) (fprintf f* (string-join (list x ";~n") ""))) lst)
+  (let ([lst (stk->list! '())]) 
+    (map (λ (x) (fprintf f* (if (string=? x "return ") x (string-join (list x ";~n") "")))) lst)
     (fprintf f* "~n"))
   (close-output-port f*) (close-output-port uf*)
   (make-h (if (empty? c) '() 
