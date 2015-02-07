@@ -64,6 +64,10 @@
                                [(list? (car x)) (add-up x)]
                                [else 0])) stk)))
 
+(define (process-new-line e)
+  (process-line (map (λ (x) (if (and (equal? (second x) 'lit) (equal? (second (lex (car x))) 'id)) 
+                            (list->string (append (list #\') (string->list (car x)))) (car x))) e) '()))
+
 (define (taken ls)
   (define (taken$ lst o e i) ; nothing is pop!'d before the return happens; reparalo.
     (cond [(or (equal? (cadar lst) 'open)
@@ -186,13 +190,14 @@
            (imp (open-input-file (string-join (list (car e) ".ufns") ""))))]
         [(string=? (caar f) "if")
          (let ([a (cdr (second f))] [b (add-return (cdr (third f)))] [c (add-return (cdr (fourth f)))])
-           (map (λ (x) (process-line (map car x) '())) (list a))
+           #;(map (λ (x) (process-line (map car x) '())) (list a))
+           (process-new-line a)
            (fprintf f* "if(~a) {~n  "
                     (polish (pop!)))
-           (process-line (map car b) '())
+           #;(process-line (map car b) '()) (process-new-line b)
            (map (λ (x) (fprintf f* (if (string=? x "return") "~a " "~a;~n  ") x)) (map (λ (x) (polish x)) stk*)) (set! stk* '())
            (fprintf f* "}~nelse {~n  ")
-           (process-line (map car c) '())
+           #;(process-line (map car c) '()) (process-new-line c)
            (map (λ (x) (fprintf f* (if (string=? x "return") "~a " "~a;~n  ") x)) (map (λ (x) (polish x)) stk*))
            (fprintf f* "}~n") (set! stk* '()))]
         [(string=? (caar f) "%err")
@@ -211,7 +216,9 @@
   (if (full-cons? (pop e))
       (if (string=? (caar (pop e)) "eval")
           (let ([g (cdr (second (pop e)))])
-            (process-line (map car g) '()))
+            (process-line (map (λ (x) (if (and (equal? (second x) 'lit) (equal? (second (lex (car x))) 'id)) 
+                                          (list->string (append (list #\') (string->list (car x)))) (car x))) g) '()))
+            #;(process-line (map car g) '())
           (begin (out-c (pop e))
                  (push-n (ret-pop e) (third (car (pop e))))))
       e))
