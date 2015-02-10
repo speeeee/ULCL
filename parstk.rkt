@@ -2,7 +2,8 @@
 (require "parapp.rkt"
          racket/list
          racket/string
-         racket/dict)
+         racket/dict
+         racket/trace)
 
 ;NOTE: the source code isn't anything special.
 
@@ -33,6 +34,7 @@
            (pop-all!))) '()))
 
 (define funs* (list (list ":" '("name" "params" "output" "def") '())
+                    (list "->" '() '())
                     (list "<<" '("val" "type" "name") '())
                     (list "drop" '("a") '())
                     (list "eval" '("a") '())
@@ -69,7 +71,7 @@
                             (list->string (append (list #\') (string->list (car x)))) (car x))) e) '()))
 
 (define (taken ls)
-  (define (taken$ lst o e i) ; nothing is pop!'d before the return happens; reparalo.
+  (define (taken$ lst o e i) ; o is the count; e is the brace-count; i is somethings I'm sure.  Probably wil remove if I don't remember what it does.
     (cond [(empty? lst) 0]
           [(or (equal? (cadar lst) 'open)
                (equal? (cadar lst) 'lopen)) (taken$ (cdr lst) o (add1 e) i)]
@@ -85,11 +87,11 @@
 #;(define (taken ls)
   (define (taken$ lst e i)
     (cond [(or (equal? (second (car lst)) 'open)
-               (equal? (second (car lst)) 'lopen)) (taken$ (cdr lst) (add1 e) (add1 i))]
+               (equal? (second (car lst)) 'lopen)) (taken$ (cdr lst) (add1 e) (sub1 i))]
           [(or (equal? (second (car lst)) 'close) 
-               (equal? (second (car lst)) 'lclos)) (taken$ (cdr lst) (add1 e) (sub1 i))]
+               (equal? (second (car lst)) 'lclos)) (taken$ (cdr lst) (add1 e) (add1 i))]
           [(equal (second (car lst)) 'id) (if (= i 0) e (taken$ (cdr lst) (add1 e) i))])))
-
+; It's here.
 (define (add-return lst)
   (let ([c (taken (reverse lst))]) 
     (append (take lst (- (length lst) c)) (list (list "%RET" 'id)) (drop lst (- (length lst) c)))
@@ -142,7 +144,7 @@
                                                                    'lit)) 
                                                       (range 0 (length (cdr (second (cdr f)))))) 
                                                  (cdr (fourth (cdr f)))))]
-                                  [e (add-return c)])
+                                  #;[e (add-return c)])
            (set! funs* (push funs* (list (caar (cdr f)) b 
                                          (make-list (length d) (list "&" 'ret)))))
            (fprintf uf* (car (pop funs*))) (fprintf uf* " {+ ")
@@ -154,7 +156,8 @@
            (if (empty? b) (fprintf f* ") {~n")
                (fprintf f* "~a a~a) {~n" (car (last b)) (- (length b) 1)))
            (process-line (map (λ (x) (if (and (equal? (second x) 'lit) (equal? (second (lex (car x))) 'id)) 
-                                         (list->string (append (list #\') (string->list (car x)))) (car x))) e) '())
+                                         (list->string (append (list #\') (string->list (car x)))) (car x))) c) '())
+           #;(test-full (list (list (list "eval" '("a") '()) e)))
            (let ([lst (stk->list! '())])
              (map (λ (x) (if (string=? x "return") 
                              (fprintf f* "  return ") (fprintf f* "  ~a;~n" x))) lst))
@@ -176,10 +179,13 @@
          (let ([e (second f)])
            (fprintf f* (if (char=? (car (string->list (car e))) #\") (list->string (cdr (ret-pop (string->list (car e)))))
                            (car e))))]
-        #;[(string=? (caar f) "%RET")
+        [(string=? (caar f) "->")
          (fprintf f* "return ")]
-        [(string=? (caar f) "%RET")
+        #;[(string=? (caar f) "->" #;"%RET")
          (push! "return ")]
+        #;[(string=? (caar f) "->")
+         (let ([e (second f)])
+           (fprintf f* "return ~a;~n" (car e)))]
         [(string=? (caar f) "in-ffi")
          (let ([e (second f)])
            (fprintf f* "#include <~a.h>~n" (car e))
@@ -191,7 +197,8 @@
            (fprintf h* "#include \"~a.h\"~n" (car e))
            (imp (open-input-file (string-join (list (car e) ".ufns") ""))))]
         [(string=? (caar f) "if")
-         (let ([a (cdr (second f))] [b (add-return (cdr (third f)))] [c (add-return (cdr (fourth f)))])
+         (let ([a (cdr (second f))] [b #;(add-return (cdr (third f))) (cdr (third f))] [c #;(add-return (cdr (fourth f)))
+                                                                                            (cdr (fourth f))])
            #;(map (λ (x) (process-line (map car x) '())) (list a))
            (process-new-line a)
            (fprintf f* "if(~a) {~n  "
