@@ -1,13 +1,13 @@
 in-ffi 'stdlib
 in-ffi 'stdio
 
-'+ { 'int 'int } { 'int } : { %RET %OUT "+" %OUT %OUT ";~n" %OUT }
-'- { 'int 'int } { 'int } : { %RET %OUT "-" %OUT %OUT ";~n" %OUT }
-'* { 'int 'int } { 'int } : { %RET %OUT "*" %OUT %OUT ";~n" %OUT }
-'/ { 'int 'int } { 'int } : { %RET %OUT "/" %OUT %OUT ";~n" %OUT }
+'+ { 'int 'int } { 'int } : { -> %OUT "+" %OUT %OUT ";~n" %OUT }
+'- { 'int 'int } { 'int } : { -> %OUT "-" %OUT %OUT ";~n" %OUT }
+'* { 'int 'int } { 'int } : { -> %OUT "*" %OUT %OUT ";~n" %OUT }
+'/ { 'int 'int } { 'int } : { -> %OUT "/" %OUT %OUT ";~n" %OUT }
 
-'= { 'int 'int } { 'bool } : { %RET %OUT "==" %OUT %OUT ";~n" %OUT }
-'< { 'int 'int } { 'bool } : { %RET %OUT "<" %OUT %OUT ";~n" %OUT }
-'> { 'int 'int } { 'bool } : { %RET %OUT ">" %OUT %OUT ";~n" %OUT }
+'= { 'int 'int } { 'bool } : { -> %OUT "==" %OUT %OUT ";~n" %OUT }
+'< { 'int 'int } { 'bool } : { -> %OUT "<" %OUT %OUT ";~n" %OUT }
+'> { 'int 'int } { 'bool } : { -> %OUT ">" %OUT %OUT ";~n" %OUT }
 
-'nth { 'int 'int* } { 'void* } : { %RET %OUT "[" %OUT %OUT "];~n" %OUT }
+'nth { 'int 'int* } { 'void* } : { -> %OUT "[" %OUT %OUT "];~n" %OUT }
