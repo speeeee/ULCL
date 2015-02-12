@@ -7,7 +7,7 @@ ULCL is a *stack-based concatenative* language based on *partial application*.  
 
 #Why is it?
 
-The point of the language is to be readable.  By use of partial application, the user may write `1 + 1' instead of `1 1 +' as seen in normal stack-based languages.  Of course, this also means that code can be as unreadable as possible by orienting the function calls in obscure ways, but hopefully that will not happen...
+The point of the language is to be readable.  By use of partial application, the user may write `1 + 1` instead of `1 1 +` as seen in normal stack-based languages.  Of course, this also means that code can be as unreadable as possible by orienting the function calls in obscure ways, but hopefully that will not happen...
 
 #What is it made in?
 
