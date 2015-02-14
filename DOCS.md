@@ -40,17 +40,17 @@ This is essentially how a stack-based language works, pushing things to the stac
 
 A concatenative language, as explained above, is a language that is based on function composition rather than application, as seen in other language.  What this means is that instead of applying a function to its arguments, you are more focused on composing functions through other functions.  Here is an example of an infix-style `+` in any C-style language:
 
-```+(1,1);```
+`+(1,1);`
 
 Here is the same expression in a stack-based concatenative language:
 
-```1 1 +```
+`1 1 +`
 
 Not much is shown here, both expressions convey the same thing in similar ways.  However, consider these two:
 
-```+(+(1,1),2);```
+`+(+(1,1),2);`
 
-```1 1 + 2 +```
+`1 1 + 2 +`
 
 Here is where it is a bit different.  The two are still exactly the same, but in the first one, it is shown as the addition of the addition of 1 and 1 with 2.  The concatenative one is different.  In terms of a stack-based language, it is essentially pushing two 1's, adding them, pushing the result, and then adding two and that result.  The example does not fully show the capability of concatenative languages, and it is difficult to show it.
 
