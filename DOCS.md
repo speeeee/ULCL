@@ -54,3 +54,36 @@ Not much is shown here, both expressions convey the same thing in similar ways. 
 
 Here is where it is a bit different.  The two are still exactly the same, but in the first one, it is shown as the addition of the addition of 1 and 1 with 2.  The concatenative one is different.  In terms of a stack-based language, it is essentially pushing two 1's, adding them, pushing the result, and then adding two and that result.  The example does not fully show the capability of concatenative languages, and it is difficult to show it.
 
+## About the language
+
+### Hello world
+
+Of course, the most simple example of a program in most languages is the "Hello, world!" proram.  Here it is in ULCL:
+
+```'stdio in-ffi
+"hello, world!\n" printf```
+
+The example has two function calls.  First, the *symbol* (essentially acts as a literal identifier), "stdio" is pushed, and the 'in-ffi' function is called on it.  'in-ffi' simple imports whatever C-library is given to it as a parameter.  Then, the "hello, world~\n" string is pushed, and the 'printf' function from stdtio is called on it.
+
+### Partial application
+
+Here is an example of adding two numbers:
+
+```import 'prelude
+1 1 +```
+
+(prelude is basically the standard library)
+
+The expression, '1 1 +', works just as it should, pushing two '1's and then '+'.  However, take a look at the 'import' function.  'import' is exactly the same as 'in-ffi' in how many parameters it takes, though here, the parameters is pushed after the function call.  This is where the *partial application* comes in.  Look at these other examples of addition:
+
+```1 1 +
+1 + 1
++ 1 1```
+
+All three examples are exactly the same.  However, the difference is in where the '+' is placed.  Partial application is the idea of applying a function to only a few of its arguments, instead of only applying it to all of them.  The first expression works as expected, but the second one a bit differently.  
+
+In the second expression, '1' is pushed.  '+' is called, but '+' only has 1 argument to work with.  Because of this, '(+ 1)' is pushed to the stack.  This essentially means that the '+' function along with one of its arguments, '1', is pushed to the stack.  Once the second '1' is pushed to the stack, it is taken by the '+' function, and it evaulates to '2', as it should.
+
+The third is similar; '(+)' is pushed, then the first '1', adding it to the '+' function, making it '(+ 1)', then the second '1' is pushed, making '+' evaulate its arguments, pushing '2'.
+
+The concept of partial application is the main difference between ULCL and other stack-based languages.  By using partial application, the user can call a function however they want.
