@@ -1,4 +1,4 @@
-import prelude
+import 'prelude
 
 'fib { 'int } { 'int } : { 'int << 'X
   if { 'X < 2 } { -> 0 + 0 } { -> ( fib ( 'X - 1 ) ) + ( fib ( 'X - 2 ) ) } }
