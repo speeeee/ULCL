@@ -67,6 +67,23 @@ Of course, the most simple example of a program in most languages is the "Hello,
 
 The example has two function calls.  First, the *symbol* (essentially acts as a literal identifier), "stdio" is pushed, and the 'in-ffi' function is called on it.  'in-ffi' simple imports whatever C-library is given to it as a parameter.  Then, the "hello, world~\n" string is pushed, and the 'printf' function from stdtio is called on it.
 
+## Basics of ULCL
+
+### Utilities & Compilation
+
+```
+!-- This is a comment.
+
+!-- If you set your environment variables to include the parstk executable:
+parstk [file]
+
+!-- If not:
+./parstk [file]
+!-- (file must be in the same folder as the parstk executable.)
+
+!-- The .ulcl extension is NOT needed in the compilation command:
+./parstk test
+```
 ### Partial application
 
 Here is an example of adding two numbers:
@@ -93,3 +110,27 @@ In the second expression, '1' is pushed.  '+' is called, but '+' only has 1 argu
 The third is similar; '(+)' is pushed, then the first '1', adding it to the '+' function, making it '(+ 1)', then the second '1' is pushed, making '+' evaulate its arguments, pushing '2'.
 
 The concept of partial application is the main difference between ULCL and other stack-based languages.  By using partial application, the user can call a function however they want.
+
+### Parenthesized expressions
+
+To help with orientation, you are able to parenthesize expressions.  As mentioned before, using partial application, it is possible switch the orientation of a function call and its arguments.  However, it would become hard for the compiler to decide which arguments go where when the orientation is not set.  This is what parenthesized expressions are for.  Here is a *reverse-Polish notation* (essentially calling the function after its arguments, like in a stack language) implementation of adding together two pairs of numbers and adding the results of them:
+
+```
+!-- (1+2)+(3+4)
+1 2 + 3 4 + +
+```
+
+It should be obvious now how the expression above is evaulated, and it evaulates to 10.  Here is a parenthesized expression:
+
+```
+( 1 + 1 )
+```
+
+With this, we can mimic the expression shown in the comment above:
+
+```
+( 1 + 2 ) + ( 3 + 4 )
+```
+
+Essentially, the results of the two parenthesized expressions are evaulated and pushed to the stack, and then are pushed into `(+ 3 7)` and out of it comes `10`.
+
