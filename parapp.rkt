@@ -18,7 +18,8 @@
 
 (define (lex x) 
   (cond [(list? x) x]
-        [(char-numeric? (string-ref x 0)) (list x 'lit)]
+        [(or (equal? (string-ref x 0) #\_) 
+             (char-numeric? (string-ref x 0))) (list x 'lit)]
         [(equal? (string-ref x 0) #\~) (list x 'temp)]
         [(equal? (string-ref x 0) #\#) (list (string-ref x 1) 'lit)]
         [(equal? (string-ref x 0) #\") (list x 'lit)]
