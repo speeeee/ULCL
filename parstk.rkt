@@ -280,7 +280,8 @@
               (tok (cdr str) (append lst (list c))))))))
 ; make another string-split referencing read-char.
 (define (string-split-spec str)
-  (splt str '()))
+  (filter (λ (x) (not (empty? (string->list x)))) (splt str '())))
+  ;(splt str '()))
 (define (splt str lst)
   (if (empty? (string->list str)) lst
       (splt (cadr (tok (string->list str) '())) (append lst (list (car (tok (string->list str) '())))))))
@@ -348,7 +349,7 @@
                                     '())]
          [out (if (not (empty? s)) (takef (drop s (+ (length in) 4)) (λ (x) (not (string=? x "-}")))) '())])
     (if (empty? s) '()
-        (begin (fprintf h* "~a ~a(" (car out) (polish (car s)))
+        (begin (fprintf h* "~a ~a(" (if (empty? out) "void" (car out)) (polish (car s)))
                (for ([i (in-range 0 (- (length in) 1))] [o in]) 
                  (fprintf h* "~a a~a, " o i))
                (if (empty? in) (fprintf h* ");~n")
