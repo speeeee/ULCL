@@ -1,0 +1,13 @@
+glClearColor {+ double double double double +} {- -}
+glClear {+ double +} {- -}
+glShadeModel {+ sym +} {- -}
+glLoadIdentity {+ +} {- -}
+glTranslatef {+ double double double +} {- -}
+glBegin {+ quot +} {- -}
+glColor3f {+ double double double +} {- -}
+glVertex2f {+ double double +} {- -}
+glEnd {+ +} {- -}
+glFlush {+ +} {- -}
+glViewport {+ double double double double +} {- -}
+glMatrixMode {+ sym +} {- -}
+glOrtho {+ double double double double double double +} {- -}
