@@ -11,3 +11,6 @@ in-ffi 'stdio
 '> { 'int 'int } { 'bool } : { -> %OUT ">" %OUT %OUT ";~n" %OUT }
 
 'nth { 'int 'int* } { 'void* } : { -> %OUT "[" %OUT %OUT "];~n" %OUT }
+
+'adr { 'int* } { 'int } : { -> "&" %OUT %OUT } 
+

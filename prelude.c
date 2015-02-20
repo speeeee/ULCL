@@ -24,4 +24,6 @@ return a1>a0;
 void* nth(int a0, int* a1) {
 return a1[a0];
 ; }
+int adr(int* a0) {
+return &a0; }
 
