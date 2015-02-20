@@ -28,10 +28,11 @@
                    (let ([x (pop stk*)])
                      (set! stk* (ret-pop stk*)) 
                      x)))
-(define (pop-all!) (if (not (empty? stk*))
-  (let ([x (pop!)]) (displayln "\"~a\"" x)
+(define (pop-all!) (set! stk* (reverse stk*)) (pop-all!!))
+(define (pop-all!!) (if (not (empty? stk*))
+  (let ([x (pop!)])
     (begin (fprintf f* (if (string=? x "return") x (string-join (list (polish x) ";~n") "")))
-           (pop-all!))) '()))
+           (pop-all!!))) '()))
 
 (define funs* (list (list ":" '("name" "params" "output" "def") '())
                     (list "->" '() '())
@@ -170,7 +171,8 @@
          (begin (fprintf f* "int main(int argc, char **argv) {  ~n")
                 #;(process-line (append (list "eval") (map (λ (x) (if (and (equal? (second x) 'lit) (equal? (second (lex (car x))) 'id))
                                                   (list->string (append (list #\') (string->list (car x)))) (car x))) (cdr f))) '())
-                (test-full (list (list (list "eval" '("a") '()) (car (cdr f)))))
+                #;(test-full (list (list (list "eval" '("a") '()) (car (cdr f)))))
+                (process-new-line (cdadr f))
                 (pop-all!)
                 (fprintf f* "}~n"))]
         [(string=? (caar f) "<<")
@@ -292,9 +294,10 @@
       (if (empty? i) o (if (= (length i) 1) (append o (list (car i)))
           (if (and (equal? (car i) #\,) (equal? (second i) #\))) (remove-commas (cdr i) o)
               (remove-commas (cdr i) (append o (list (car i))))))))
-    (define (change-ops i o)
+    (define (change-ops i o) 
       (let ([test-op (case (car i) [(#\+) (list #\a #\d #\d)]
-                                     [(#\-) (list #\s #\u #\b)]
+                                     [(#\-) (if (and (> (length i) 1) (char-numeric? (second i))) (list #\-)
+                                                (list #\s #\u #\b))]
                                      [(#\*) (list #\t #\i)] [(#\/) (list #\d #\i #\v)]
                                      [(#\=) (list #\e #\q #\u)] [(#\<) (list #\l #\e #\s)]
                                      [(#\>) (list #\g #\r #\t)]
