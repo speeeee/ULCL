@@ -2,8 +2,8 @@
 - {+ int int +} {- int -}
 * {+ int int +} {- int -}
 / {+ int int +} {- int -}
-= {+ int int +} {- bool -}
-< {+ int int +} {- bool -}
-> {+ int int +} {- bool -}
+= {+ int int +} {- int -}
+< {+ int int +} {- int -}
+> {+ int int +} {- int -}
 nth {+ int int* +} {- void* -}
 adr {+ int* +} {- int -}

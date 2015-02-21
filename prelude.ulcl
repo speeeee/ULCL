@@ -6,9 +6,9 @@ in-ffi 'stdio
 '* { 'int 'int } { 'int } : { -> %OUT "*" %OUT %OUT ";~n" %OUT }
 '/ { 'int 'int } { 'int } : { -> %OUT "/" %OUT %OUT ";~n" %OUT }
 
-'= { 'int 'int } { 'bool } : { -> %OUT "==" %OUT %OUT ";~n" %OUT }
-'< { 'int 'int } { 'bool } : { -> %OUT "<" %OUT %OUT ";~n" %OUT }
-'> { 'int 'int } { 'bool } : { -> %OUT ">" %OUT %OUT ";~n" %OUT }
+'= { 'int 'int } { 'int } : { -> %OUT "==" %OUT %OUT ";~n" %OUT }
+'< { 'int 'int } { 'int } : { -> %OUT "<" %OUT %OUT ";~n" %OUT }
+'> { 'int 'int } { 'int } : { -> %OUT ">" %OUT %OUT ";~n" %OUT }
 
 'nth { 'int 'int* } { 'void* } : { -> %OUT "[" %OUT %OUT "];~n" %OUT }
 
