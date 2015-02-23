@@ -298,7 +298,7 @@
       (let ([test-op (case (car i) [(#\+) (list #\a #\d #\d)]
                                      [(#\-) (if (and (> (length i) 1) (char-numeric? (second i))) (list #\-)
                                                 (list #\s #\u #\b))]
-                                     [(#\*) (list #\t #\i)] [(#\/) (list #\d #\i #\v)]
+                                     [(#\*) (list #\t #\i)] [(#\/) (list #\d #\v #\i)]
                                      [(#\=) (list #\e #\q #\u)] [(#\<) (list #\l #\e #\s)]
                                      [(#\>) (list #\g #\r #\t)]
                                      [else (list (car i))])])
