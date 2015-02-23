@@ -1,6 +1,6 @@
 in-ffi 'stdlib
-in-ffi 'GL/gl
-in-ffi 'GL/glut
+in-ffi 'OpenGL/gl
+in-ffi 'GLUT/glut
 import 'prelude
 
 'paint { } { } : { 
@@ -30,7 +30,7 @@ import 'prelude
   glOrtho -30.0 30.0 -30.0 30.0 -30.0 30.0
   glMatrixMode 'GL_MODELVIEW }
 
-MAIN: { glutInit ( adr 'argc ) 'argv
+MAIN: { glutInit '&argc 'argv
         glutInitWindowSize 640 480
         glutCreateWindow "Triangle"
         glutDisplayFunc 'paint

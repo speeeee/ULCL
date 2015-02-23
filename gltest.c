@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#include <GL/gl.h>
-#include <GL/glut.h>
+#include <OpenGL/gl.h>
+#include <GLUT/glut.h>
 #include "prelude.h"
 void paint() {
   glClearColor(0.3,0.3,0.3,0.0);
@@ -28,7 +28,7 @@ int width = a0;
   glMatrixMode(GL_MODELVIEW);
 ; }
 int main(int argc, char **argv) {  
-glutInit(adr(argc),argv);
+glutInit(&argc,argv);
 glutInitWindowSize(640,480);
 glutCreateWindow("Triangle");
 glutDisplayFunc(paint);
