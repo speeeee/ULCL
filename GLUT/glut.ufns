@@ -1,0 +1,6 @@
+glutInit {+ sym sym +} {- -}
+glutInitWindowSize {+ double double +} {- -}
+glutCreateWindow {+ string +} {- -}
+glutDisplayFunc {+ sym +} {- -}
+glutReshapeFunc {+ sym +} {- -} 
+glutMainLoop {+ +} {- -}
