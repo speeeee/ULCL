@@ -10,7 +10,6 @@ in-ffi 'stdio
 '< { 'int 'int } { 'int } : { -> %OUT "<" %OUT %OUT ";~n" %OUT }
 '> { 'int 'int } { 'int } : { -> %OUT ">" %OUT %OUT ";~n" %OUT }
 
-'nth { 'int 'int* } { 'void* } : { -> %OUT "[" %OUT %OUT "];~n" %OUT }
+'nth { 'int 'void** } { 'void* } : { -> "(void *)" %OUT %OUT "[" %OUT %OUT "];~n" %OUT }
 
-'adr { 'int* } { 'int } : { -> "&" %OUT %OUT } 
 

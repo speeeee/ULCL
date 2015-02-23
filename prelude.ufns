@@ -5,5 +5,4 @@
 = {+ int int +} {- int -}
 < {+ int int +} {- int -}
 > {+ int int +} {- int -}
-nth {+ int int* +} {- void* -}
-adr {+ int* +} {- int -}
+nth {+ int void** +} {- void* -}
