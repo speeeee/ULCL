@@ -28,7 +28,7 @@
         [(equal? (string-ref x 0) #\{) (list x 'lopen)]
         [(equal? (string-ref x 0) #\)) (list x 'close)]
         [(equal? (string-ref x 0) #\}) (list x 'lclos)]
-        [(equal? (string-ref x 0) #\&) (list x 'ret)]
+        [(and (= (length (string->list x)) 1) (equal? (string-ref x 0) #\&)) (list x 'ret)]
         [(equal? (string-ref x 0) #\') (list (list->string (cdr (string->list x))) 'lit)]
         [else (list x 'id)]))
 
