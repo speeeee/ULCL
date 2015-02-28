@@ -39,6 +39,7 @@
                     (list "<<" '("val" "type" "name") '())
                     (list "drop" '("a") '())
                     (list "eval" '("a") '())
+                    (list "STRUCT:" '("types" "names") '())
                     (list "MAIN:" '("quot") '())
                     (list "%OUT" '("a") '())
                     (list "%RET" '() '())
@@ -176,11 +177,15 @@
                 (pop-all!)
                 (fprintf f* "}~n"))]
         [(string=? (caar f) "<<")
-         (fprintf f* "~a ~a = ~a;~n" (caaddr f) (car (cadddr f)) (caadr f))]
+         (begin (fprintf f* "~a ~a = " (caaddr f) (car (cadddr f)))
+                (if (list? (caadr f)) (process-new-line (cdadr f))
+                    (fprintf f* "~a;~n" (caadr f))))]
         [(string=? (caar f) "%OUT")
          (let ([e (second f)])
            (fprintf f* (if (char=? (car (string->list (car e))) #\") (list->string (cdr (ret-pop (string->list (car e)))))
                            (car e))))]
+        ;[(string=? (caar f) "STRUCT:")
+        ; (
         [(string=? (caar f) "->")
          (fprintf f* "return ")]
         #;[(string=? (caar f) "->" #;"%RET")
